@@ -1,0 +1,4 @@
+;$Id$
+name = twitter_views
+description = 'description of twitter_views'
+core = 6.x
