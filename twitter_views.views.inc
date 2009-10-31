@@ -96,6 +96,9 @@ function twitter_views_views_data() {
  */
 function twitter_views_views_handlers() {
   return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'twitter_views') . '/handlers',
+    ),
     'handlers' => array(
       // Fields
       'twitter_views_handler_field' => array(
