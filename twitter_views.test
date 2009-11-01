@@ -19,6 +19,7 @@ class twitterViewsQueryPluginTest extends DrupalWebTestCase {
   }
 
   function testFoo() {
-    $this->assertEqual(TRUE, TRUE);
+    module_include('inc', 'twitter', 'twitter_views_plugin_query_twitter');
+    $query = new twitter_views_plugin_query_twitter;
   }
 }

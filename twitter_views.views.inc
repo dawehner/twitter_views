@@ -13,7 +13,7 @@ function twitter_views_views_data() {
     'help' => t('blub'),
     'query class' => 'twitter_query'
   );
-  
+
   // String
   $data['twitter_api']['string'] = array(
     'title' => t('String'),
@@ -110,11 +110,11 @@ function twitter_views_views_handlers() {
 
       'twitter_views_handler_field_markup' => array(
         'parent' => 'twitter_views_handler_field',
-      ),      
+      ),
       'twitter_views_handler_field_from_user' => array(
         'parent' => 'twitter_views_handler_field'
       ),
-      
+
       // Filters
       'twitter_views_handler_filter' => array(
         'parent' => 'views_handler_filter'
