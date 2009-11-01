@@ -124,7 +124,7 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
     foreach ($this->$where as $group => $info) {
       $clause = implode($info['type'], $info['clauses']);
       if (count($info['clauses']) > 1) {
-        $clause = '' . $clause . '';
+        $clause = $clause;
       }
       $clauses[] = $clause;
     }
@@ -132,10 +132,10 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
     if ($clauses) {
 //       $keyword = drupal_strtoupper($where);
       if (count($clauses) > 1) {
-        return "" . implode(")" . $this->group_operator . '', $clauses) . "";
+        return implode(")" . $this->group_operator , $clauses);
       }
       else {
-        return "" . array_shift($clauses);
+        return array_shift($clauses);
       }
     }
     return "";
@@ -149,7 +149,7 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
     foreach ($this->where as $group => $where) {
       $args = array_merge($args, $where['args']);
     }
-    
+ 
     if ($this->having) {
       foreach ($this->having as $group => $having) {
         $args = array_merge($args, $having['args']);
@@ -222,11 +222,16 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
       $this->where[$group]['args'] = array_merge($this->where[$group]['args'], array_values($args));
     }
   }
-  
+
   /**
    * Let modules modify the query just prior to finalizing it.
    */
-  function alter(&$view) {  }
+  function alter(&$view) {
+    foreach (module_implements('twitter_views_query_alter') as $module) {
+      $function = $module . '_twitter_views_query_alter';
+      $function($view, $this);
+    }
+  }
 
   /**
    * Add a signature to the query, if such a thing is feasible.
@@ -234,5 +239,7 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
    * This signature is something that can be used when perusing query logs to
    * discern where particular queries might be coming from.
    */
-  function add_signature(&$view) { }
+  function add_signature(&$view) {
+    //$view->query->add_field(NULL, "'" . $view->name . ':' . $view->current_display . "'", 'view_name');
+  }
 }
