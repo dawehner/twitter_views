@@ -17,67 +17,32 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
   }
 
   /**
-   * Builds the necessary info to execute the query.
+   * Construct the "WHERE" or "HAVING" part of the query.
+   *
+   * @param $where
+   *   'where' or 'having'.
    */
-  function build(&$view) {
-    $view->build_info['query'] = $this->query($view);
-    $view->build_info['count_query'] = $this->query($view, TRUE);
-    $view->build_info['query_args'] = $this->get_where_args();
-  }
-
-  /**
-   * Executes the query and fills the associated view object with according
-   * values.
-   * 
-   * Values to set: $view->result, $view->total_rows, $view->execute_time,
-   * $view->pager['current_page'].
-   */
-  function execute(&$view) {
-    $query = $view->build_info['query'];
-
-    if ($query) {
-      $replacements = module_invoke_all('views_query_substitutions', $view);
-      $query = str_replace(array_keys($replacements), $replacements, $query);
-
-
-      $url = $this->api_url .'?'. $query;
-      dsm($url);
-
-      $start = views_microtime();
-
-      $results = drupal_http_request($url, array(), 'GET');
-
-      if (_twitter_request_failure($results)) {
-        return FALSE;
+  function condition_query($where = 'where') {
+    $clauses = array();
+    foreach ($this->$where as $group => $info) {
+      $clause = implode($info['type'], $info['clauses']);
+      if (count($info['clauses']) > 1) {
+        $clause = $clause;
       }
-
-      $results = json_decode($results->data, TRUE);
-
-      if ($results['results']) {
-        $view->result = $results['results'];
-
-        // $this->results are arrays.
-        foreach ($view->result as $key => $value) {
-          $view->result[$key] = (object) $value;
-        }
-
-        // Save the metadata into the object
-        unset($results['results']);
-        foreach ($results as $key => $value) {
-          $this->$key = $value;
-        }
-
-        $this->execute_time = $this->completed_in;
-
-        // FIXME
-        $this->total_rows = $this->results_per_page * 2;
-        $this->pager['current_page'] = $this->page -1;
-      }
+      $clauses[] = $clause;
     }
 
-    $view->execute_time = views_microtime() - $start;
+    if ($clauses) {
+//       $keyword = drupal_strtoupper($where);
+      if (count($clauses) > 1) {
+        return implode(")" . $this->group_operator , $clauses);
+      }
+      else {
+        return array_shift($clauses);
+      }
+    }
+    return "";
   }
-
 
   /**
    * Generate a query and a countquery from all of the information supplied
@@ -113,33 +78,6 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
     return $params;
   }
 
-  /**
-   * Construct the "WHERE" or "HAVING" part of the query.
-   *
-   * @param $where
-   *   'where' or 'having'.
-   */
-  function condition_query($where = 'where') {
-    $clauses = array();
-    foreach ($this->$where as $group => $info) {
-      $clause = implode($info['type'], $info['clauses']);
-      if (count($info['clauses']) > 1) {
-        $clause = $clause;
-      }
-      $clauses[] = $clause;
-    }
-
-    if ($clauses) {
-//       $keyword = drupal_strtoupper($where);
-      if (count($clauses) > 1) {
-        return implode(")" . $this->group_operator , $clauses);
-      }
-      else {
-        return array_shift($clauses);
-      }
-    }
-    return "";
-  }
 
   /**
    * Get the arguments attached to the WHERE and HAVING clauses of this query.
@@ -234,12 +172,68 @@ class twitter_views_plugin_query_twitter extends views_plugin_query {
   }
 
   /**
-   * Add a signature to the query, if such a thing is feasible.
-   *
-   * This signature is something that can be used when perusing query logs to
-   * discern where particular queries might be coming from.
+   * Builds the necessary info to execute the query.
    */
+  function build(&$view) {
+    $view->build_info['query'] = $this->query($view);
+    $view->build_info['count_query'] = $this->query($view, TRUE);
+    $view->build_info['query_args'] = $this->get_where_args();
+  }
+
+  /**
+   * Executes the query and fills the associated view object with according
+   * values.
+   * 
+   * Values to set: $view->result, $view->total_rows, $view->execute_time,
+   * $view->pager['current_page'].
+   */
+  function execute(&$view) {
+    $query = $view->build_info['query'];
+
+    if ($query) {
+      $replacements = module_invoke_all('views_query_substitutions', $view);
+      $query = str_replace(array_keys($replacements), $replacements, $query);
+
+
+      $url = $this->api_url .'?'. $query;
+
+      $start = views_microtime();
+
+      $results = drupal_http_request($url, array(), 'GET');
+
+      if (_twitter_request_failure($results)) {
+        return FALSE;
+      }
+
+      $results = json_decode($results->data, TRUE);
+
+      if ($results['results']) {
+        $view->result = $results['results'];
+
+        // $this->results are arrays.
+        foreach ($view->result as $key => $value) {
+          $view->result[$key] = (object) $value;
+        }
+
+        // Save the metadata into the object
+        unset($results['results']);
+        foreach ($results as $key => $value) {
+          $this->$key = $value;
+        }
+
+        $this->execute_time = $this->completed_in;
+
+        // FIXME
+        $this->total_rows = $this->results_per_page * 2;
+        $this->pager['current_page'] = $this->page -1;
+      }
+    }
+
+    $view->execute_time = views_microtime() - $start;
+  }
+
   function add_signature(&$view) {
     //$view->query->add_field(NULL, "'" . $view->name . ':' . $view->current_display . "'", 'view_name');
   }
+
 }
