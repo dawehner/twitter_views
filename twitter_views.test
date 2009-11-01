@@ -1,0 +1,24 @@
+<?php
+// $Id$
+/**
+ * @file
+ *   Test for twitter views query backend.
+ */
+
+class twitterViewsQueryPluginTest extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'twitter views query plugin',
+      'desc' => 'blub',
+      'group' => 'twitter',
+    );
+  }
+
+  function setUp() {
+    parent::setUp();
+  }
+
+  function testFoo() {
+    $this->assertEqual(TRUE, TRUE);
+  }
+}
